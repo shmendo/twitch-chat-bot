@@ -44,6 +44,7 @@ func (client *client) ListenForMessages() {
 			if err != nil {
 				log.Printf("failed to parse message (%s)", message.Text)
 			}
+			log.Println("Client.Rcvd() <- ", message.Command.Channel)
 			client.messageHandler(message, func(replyWith string) {
 				if replyWith != "" {
 					client.Send(replyWith)
@@ -81,17 +82,6 @@ func (client *client) Authenticate(username string, password string) error {
 	err = client.Send(nick)
 	if err != nil {
 		log.Println("ERROR: Authenticate (NICK):", err.Error())
-		return err
-	}
-	return nil
-}
-
-func (client *client) JoinChannel(channel string) error {
-	log.Printf("Client.JoinChannel(%s)\n", channel)
-	nick := fmt.Sprintf("JOIN %s", channel)
-	err := client.Send(nick)
-	if err != nil {
-		log.Println("ERROR: JoinChannel (JOIN):", err.Error())
 		return err
 	}
 	return nil

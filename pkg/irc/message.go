@@ -1,7 +1,6 @@
 package irc
 
 import (
-	"errors"
 	"log"
 	"strings"
 )
@@ -34,57 +33,49 @@ type Message struct {
 }
 
 func NewMessage(messageText string) (Message, error) {
-	log.Println("NewMessage()", messageText)
+	// log.Println("NewMessage()", messageText)
 	// initialize message w/original text
 	message := Message{
 		Text: messageText,
 	}
 
-	index := 0
-	endIndex := 0
+	textToProcess := messageText
+	idx := 0
 	segment := ""
 
-	if string(messageText[index]) == "@" {
-		endIndex = strings.Index(messageText, " ")
-		if endIndex <= index {
-			message.Valid = false
-			return message, errors.New("invalid tags component")
-		}
-		segment = messageText[index:endIndex]
+	if string(textToProcess[0]) == "@" {
+		idx = strings.Index(textToProcess, " ")
+		segment = textToProcess[0:idx]
 		addTags(&message, segment)
+		textToProcess = textToProcess[idx:]
 	}
-	log.Println("NewMessage(Tags) > ", index, endIndex, segment)
+	// log.Println("NewMessage(Tags) > ", 0, idx, segment)
 
 	// Extract SOURCE (nick@host)
 	// The idx should point to the source part; otherwise, it's a PING command.
-	if string(messageText[index]) == ":" {
-		index += 1 // discard :
-		endIndex = strings.Index(messageText, " ")
-		if endIndex <= index {
-			message.Valid = false
-			return message, errors.New("invalid source component")
-		}
-		segment = messageText[index:endIndex]
+	if string(textToProcess[0]) == ":" {
+		idx = strings.Index(textToProcess, " ")
+		segment = textToProcess[1:idx]
 		addSource(&message, segment)
-		index = endIndex + 1 // advance to next segment
+		textToProcess = textToProcess[idx:]
 	}
-	log.Println("NewMessage(Source) > ", index, endIndex, segment)
+	// log.Println("NewMessage(Source) > ", 0, idx, segment)
 
 	// Extract COMMAND
-	endIndex = strings.Index(messageText, ":")
-	if endIndex == -1 {
+	idx = strings.Index(textToProcess, ":")
+	if idx == -1 {
 		// Not all messages include parameters
-		endIndex = len(messageText)
+		idx = len(textToProcess)
 	}
-	segment = messageText[index:endIndex]
-	log.Println("NewMessage(Command) > ", index, endIndex, segment)
+	segment = textToProcess[0:idx]
+	// log.Println("NewMessage(Command) > ", 0, idx, segment)
 	addCommand(&message, segment)
+	textToProcess = textToProcess[idx:]
 
 	// Extract PARAMETERS
-	if endIndex != len(messageText) {
-		index += 1
-		segment = messageText[index:endIndex]
-		log.Println("NewMessage(Parameters) > ", index, endIndex, segment)
+	if len(textToProcess) > 0 {
+		segment = textToProcess[1:]
+		// log.Println("NewMessage(Parameters) > ", 0, idx, segment)
 		addParameters(&message, segment)
 	}
 

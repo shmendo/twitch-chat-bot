@@ -37,7 +37,7 @@ func main() {
 }
 
 func HandleMessage(message irc.Message, replyWith irc.ReplyCallback) {
-	switch message.Command.Command {
+	switch message.Command.Channel {
 	case "JOIN":
 		log.Printf("Successfully joined %s", message.Command.Channel)
 		break
@@ -66,7 +66,6 @@ func HandleMessage(message irc.Message, replyWith irc.ReplyCallback) {
 	case "421":
 		break
 	case "001":
-		replyWith(fmt.Sprintf("JOIN %s", os.Getenv("channel")))
 		break
 	case "002":
 		break
@@ -83,9 +82,16 @@ func HandleMessage(message irc.Message, replyWith irc.ReplyCallback) {
 	case "375":
 		break
 	case "376":
-		break
+		channelName := os.Getenv("CHANNEL")
+		replyWith(fmt.Sprintf("JOIN #%s", channelName))
 	default:
 		log.Printf("UNKNOWN: %s", message.Text)
+		log.Printf(
+			"Command: %s, Channel: %s, Info: %s",
+			message.Command.Command,
+			message.Command.Channel,
+			message.Command.Info,
+		)
 	}
 }
 
