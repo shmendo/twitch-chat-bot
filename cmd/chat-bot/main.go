@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -13,7 +14,6 @@ func main() {
 		endpoint = os.Getenv("ENDPOINT")
 		username = os.Getenv("USERNAME")
 		password = os.Getenv("API_TOKEN")
-		channel  = os.Getenv("CHANNEL")
 		wg       sync.WaitGroup
 	)
 
@@ -29,27 +29,66 @@ func main() {
 	// listen forever in the background
 	wg.Add(1)
 	go client.ListenForMessages()
+	client.Authenticate(username, password)
 
-	// Then, let's authenticate
-	err = client.Authenticate(username, password)
-	if err != nil {
-		log.Println("could not authenticate!", err)
-		os.Exit(1)
-	}
-
-	// Finally, let's join a room
-	err = client.JoinChannel(channel)
-	if err != nil {
-		log.Printf("could not join %s!", channel)
-		log.Println(err)
-		os.Exit(1)
-	}
-
+	// Wait forever :)
 	wg.Wait()
 	log.Println("Exiting")
 }
 
-func HandleMessage(message string) {
-	log.Println("OnMessage()", message)
+func HandleMessage(message irc.Message, replyWith irc.ReplyCallback) {
+	switch message.Command.Command {
+	case "JOIN":
+		log.Printf("Successfully joined %s", message.Command.Channel)
+		break
+	case "PART":
+		break
+	case "NOTICE":
+		break
+	case "CLEARCHAT":
+		break
+	case "HOSTTARGET":
+		break
+	case "PRIVMSG":
+		break
+	case "PING":
+		break
+	case "CAP":
+		break
+	case "GLOBALUSERSTATE":
+		break
+	case "USERSTATE":
+		break
+	case "ROOMSTATE":
+		break
+	case "RECONNECT":
+		break
+	case "421":
+		break
+	case "001":
+		replyWith(fmt.Sprintf("JOIN %s", os.Getenv("channel")))
+		break
+	case "002":
+		break
+	case "003":
+		break
+	case "004":
+		break
+	case "353":
+		break
+	case "366":
+		break
+	case "372":
+		break
+	case "375":
+		break
+	case "376":
+		break
+	default:
+		log.Printf("UNKNOWN: %s", message.Text)
+	}
+}
+
+func Authenticate() {
 
 }

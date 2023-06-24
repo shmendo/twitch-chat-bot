@@ -3,7 +3,7 @@
 ## Functionality
 
 - define a command (message) to listen for from twitch chat
-- provide authentication mechanism w/twitch so we can read messages ion the chat window
+- provide authentication mechanism w/twitch so we can read messages on the chat window
 - reach out to 3rd party API and then post some data back
 - post response to the chat window
 

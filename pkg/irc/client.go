@@ -7,10 +7,11 @@ import (
 	"log"
 	"net"
 	"os"
-	"strings"
 )
 
-type MessageHandler func(message string)
+type ReplyCallback func(command string)
+
+type MessageHandler func(message Message, replyWith ReplyCallback)
 
 type client struct {
 	conn           net.Conn
@@ -38,17 +39,16 @@ func (client *client) ListenForMessages() {
 	for client.scanner.Scan() {
 		line := client.scanner.Text()
 
-		// handle messages which require a reply
-		if strings.HasPrefix(line, "PING") {
-			err := client.Send(strings.Replace(line, "PING", "PONG", 1))
-			if err != nil {
-				log.Println("Error sending PONG, we'll probably get terminated soon")
-			}
-		}
-
 		if client.messageHandler != nil {
-			// @todo refactor this to a Message
-			client.messageHandler(line)
+			message, err := NewMessage(line)
+			if err != nil {
+				log.Printf("failed to parse message (%s)", message.Text)
+			}
+			client.messageHandler(message, func(replyWith string) {
+				if replyWith != "" {
+					client.Send(replyWith)
+				}
+			})
 		} else {
 			log.Println("no messageHandler set!")
 			log.Println(line)
@@ -65,6 +65,8 @@ func (client *client) Send(message string) error {
 func (client *client) OnMessage(handler MessageHandler) {
 	client.messageHandler = handler
 }
+
+// func (client *client) RegisterBotCommand(handler)
 
 func (client *client) Authenticate(username string, password string) error {
 	log.Printf("Client.Authenticate(%s)\n", username)
