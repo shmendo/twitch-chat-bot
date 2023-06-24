@@ -1,55 +1,175 @@
 package irc
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseMessage(t *testing.T) {
+func TestNewClient(t *testing.T) {
 	cases := []struct {
 		description string
 		input       string
-		expected    Message
+		expected    string
 		wantError   bool
-	}{
-		{
-			"should handle an empty message",
-			"",
-			Message{},
-			true,
-		},
-		{
-			"should handle an invalid message",
-			"neeners my bruv",
-			Message{},
-			true,
-		},
-		{
-			"should parse welcome message",
-			":tmi.twitch.tv 001 benjamin_walters :Welcome, GLHF!",
-			Message{},
-			false,
-		},
-		{
-			"should parse ",
-			":benjamin_walters.tmi.twitch.tv 366 benjamin_walters #benjamin_walters :End of /NAMES list",
-			Message{},
-			false,
-		},
-		{
-			"should handle special PING command",
-			"PING :tmi.twitch.tv",
-			Message{},
-			false,
-		},
-	}
+	}{}
 
 	for _, c := range cases {
 		t.Run(
 			c.description,
 			func(t *testing.T) {
-				assert.NoError(t)
+				actual, err := NewMessage(c.input)
+				if c.wantError {
+					assert.Error(t, err, fmt.Sprintf("unexpected value returned %v", actual))
+					return
+				}
+				assert.NoError(t, err, actual)
+				assert.Equal(t, c.expected, actual)
+			},
+		)
+	}
+}
+
+func TestListenForMessages(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    string
+		wantError   bool
+	}{}
+
+	for _, c := range cases {
+		t.Run(
+			c.description,
+			func(t *testing.T) {
+				actual, err := NewMessage(c.input)
+				if c.wantError {
+					assert.Error(t, err, fmt.Sprintf("unexpected value returned %v", actual))
+					return
+				}
+				assert.NoError(t, err, actual)
+				assert.Equal(t, c.expected, actual)
+			},
+		)
+	}
+}
+
+func TestSend(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    string
+		wantError   bool
+	}{}
+
+	for _, c := range cases {
+		t.Run(
+			c.description,
+			func(t *testing.T) {
+				actual, err := NewMessage(c.input)
+				if c.wantError {
+					assert.Error(t, err, fmt.Sprintf("unexpected value returned %v", actual))
+					return
+				}
+				assert.NoError(t, err, actual)
+				assert.Equal(t, c.expected, actual)
+			},
+		)
+	}
+}
+
+func TestOnMessage(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    string
+		wantError   bool
+	}{}
+
+	for _, c := range cases {
+		t.Run(
+			c.description,
+			func(t *testing.T) {
+				actual, err := NewMessage(c.input)
+				if c.wantError {
+					assert.Error(t, err, fmt.Sprintf("unexpected value returned %v", actual))
+					return
+				}
+				assert.NoError(t, err, actual)
+				assert.Equal(t, c.expected, actual)
+			},
+		)
+	}
+}
+
+func TestRegisterBotCommand(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    string
+		wantError   bool
+	}{}
+
+	for _, c := range cases {
+		t.Run(
+			c.description,
+			func(t *testing.T) {
+				actual, err := NewMessage(c.input)
+				if c.wantError {
+					assert.Error(t, err, fmt.Sprintf("unexpected value returned %v", actual))
+					return
+				}
+				assert.NoError(t, err, actual)
+				assert.Equal(t, c.expected, actual)
+			},
+		)
+	}
+}
+
+func TestPong(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    string
+		wantError   bool
+	}{}
+
+	for _, c := range cases {
+		t.Run(
+			c.description,
+			func(t *testing.T) {
+				actual, err := NewMessage(c.input)
+				if c.wantError {
+					assert.Error(t, err, fmt.Sprintf("unexpected value returned %v", actual))
+					return
+				}
+				assert.NoError(t, err, actual)
+				assert.Equal(t, c.expected, actual)
+			},
+		)
+	}
+}
+
+func TestAuthenticate(t *testing.T) {
+	cases := []struct {
+		description string
+		input       string
+		expected    string
+		wantError   bool
+	}{}
+
+	for _, c := range cases {
+		t.Run(
+			c.description,
+			func(t *testing.T) {
+				actual, err := NewMessage(c.input)
+				if c.wantError {
+					assert.Error(t, err, fmt.Sprintf("unexpected value returned %v", actual))
+					return
+				}
+				assert.NoError(t, err, actual)
+				assert.Equal(t, c.expected, actual)
 			},
 		)
 	}

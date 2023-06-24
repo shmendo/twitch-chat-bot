@@ -6,6 +6,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/shmendo/twitch-chat-bot/pkg/chuck"
 	"github.com/shmendo/twitch-chat-bot/pkg/irc"
 )
 
@@ -33,68 +34,40 @@ func main() {
 
 	// Wait forever :)
 	wg.Wait()
-	log.Println("Exiting")
 }
 
+// The Meat & Potatoes
 func HandleMessage(message irc.Message, replyWith irc.ReplyCallback) {
-	switch message.Command.Channel {
-	case "JOIN":
-		log.Printf("Successfully joined %s", message.Command.Channel)
-		break
-	case "PART":
-		break
-	case "NOTICE":
-		break
-	case "CLEARCHAT":
-		break
-	case "HOSTTARGET":
-		break
-	case "PRIVMSG":
-		break
-	case "PING":
-		break
-	case "CAP":
-		break
-	case "GLOBALUSERSTATE":
-		break
-	case "USERSTATE":
-		break
-	case "ROOMSTATE":
-		break
-	case "RECONNECT":
-		break
-	case "421":
-		break
-	case "001":
-		break
-	case "002":
-		break
-	case "003":
-		break
-	case "004":
-		break
-	case "353":
-		break
-	case "366":
-		break
-	case "372":
-		break
-	case "375":
-		break
-	case "376":
-		channelName := os.Getenv("CHANNEL")
-		replyWith(fmt.Sprintf("JOIN #%s", channelName))
-	default:
-		log.Printf("UNKNOWN: %s", message.Text)
-		log.Printf(
-			"Command: %s, Channel: %s, Info: %s",
-			message.Command.Command,
-			message.Command.Channel,
-			message.Command.Info,
-		)
+	if message.CommandType == "bot" && message.Command.Command == "chucknorris" {
+		fact, err := chuck.RandomChuckFact()
+		if err != nil {
+			log.Println("Could not retrieve chucknorris fact, he may have roundhouse kicked the server!", err)
+		}
+		log.Println(fact)
+		log.Println(message.Source.Nick)
+		log.Println(message.Source.Host)
+		log.Println(message.Command.Command)
+		log.Println(message.Command.Channel)
+		log.Println(message.Command.Info)
+		log.Println(message.Parameters)
+		// replyWith()
+	} else {
+		switch message.Command.Command {
+		case "JOIN":
+			log.Printf("Successfully joined %s", message.Command.Channel)
+			break
+		case "376":
+			// We have completed auth, let's join the room
+			channelName := os.Getenv("CHANNEL")
+			replyWith(fmt.Sprintf("JOIN #%s", channelName))
+			break
+		default:
+			// log.Printf(
+			// 	"Nothing to do for - Command: %s, Channel: %s, Info: %s",
+			// 	message.Command.Command,
+			// 	message.Command.Channel,
+			// 	message.Command.Info,
+			// )
+		}
 	}
-}
-
-func Authenticate() {
-
 }

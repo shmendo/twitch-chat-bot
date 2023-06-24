@@ -28,15 +28,16 @@ type Message struct {
 	Tags        []Tag
 	Source      Source
 	Command     Command
-	CommandType string
-	Parameters  string
+	CommandType string // bot || standard
+	Parameters  string // everything after the last :
 }
 
 func NewMessage(messageText string) (Message, error) {
 	// log.Println("NewMessage()", messageText)
 	// initialize message w/original text
 	message := Message{
-		Text: messageText,
+		Text:  messageText,
+		Valid: true,
 	}
 
 	textToProcess := messageText
@@ -49,7 +50,6 @@ func NewMessage(messageText string) (Message, error) {
 		addTags(&message, segment)
 		textToProcess = textToProcess[idx:]
 	}
-	// log.Println("NewMessage(Tags) > ", 0, idx, segment)
 
 	// Extract SOURCE (nick@host)
 	// The idx should point to the source part; otherwise, it's a PING command.
@@ -110,6 +110,7 @@ func addSource(message *Message, sourceString string) {
 
 // Parse out command
 func addCommand(message *Message, commandString string) {
+	commandString = strings.Trim(commandString, " ")
 	commandSegments := strings.Split(commandString, " ")
 	message.Command.Command = commandSegments[0]
 	message.Command.Channel = ""
@@ -129,4 +130,5 @@ func addParameters(message *Message, parameterString string) {
 	if string(parameterString[0]) == "!" {
 		message.CommandType = "bot"
 	}
+	message.Parameters = parameterString
 }

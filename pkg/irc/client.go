@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 )
 
 type ReplyCallback func(command string)
@@ -36,29 +37,45 @@ func NewClient(endpoint string) (*client, error) {
 
 func (client *client) ListenForMessages() {
 	log.Println("Client.ListenForMessages()")
+
 	for client.scanner.Scan() {
 		line := client.scanner.Text()
+		// log.Printf("----------(%s)----------", line)
 
-		if client.messageHandler != nil {
-			message, err := NewMessage(line)
-			if err != nil {
-				log.Printf("failed to parse message (%s)", message.Text)
-			}
-			log.Println("Client.Rcvd() <- ", message.Command.Channel)
+		if client.messageHandler == nil {
+			log.Println("no messageHandler set!")
+			log.Println(line)
+			continue
+		}
+
+		message, err := NewMessage(line)
+		if err != nil {
+			log.Printf("failed to parse message (%s)", message.Text)
+			continue
+		}
+
+		// log.Println("Client.Rcvd() <- ", message.Command.Channel)
+		if message.Command.Command == "PING" {
+			client.Pong(message.Parameters)
+		} else {
 			client.messageHandler(message, func(replyWith string) {
 				if replyWith != "" {
 					client.Send(replyWith)
 				}
 			})
-		} else {
-			log.Println("no messageHandler set!")
-			log.Println(line)
 		}
 	}
 }
 
 func (client *client) Send(message string) error {
-	log.Print("Client.Send() -> ", message)
+	if strings.Contains(message, "PASS") {
+		log.Println("Client.Send() -> PASS:REDACTED")
+	} else {
+		log.Println("Client.Send() -> ", message)
+	}
+	if !strings.HasSuffix(message, "\r\n") {
+		message = fmt.Sprintf("%s\r\n", message)
+	}
 	_, err := client.conn.Write([]byte(message))
 	return err
 }
@@ -67,12 +84,22 @@ func (client *client) OnMessage(handler MessageHandler) {
 	client.messageHandler = handler
 }
 
-// func (client *client) RegisterBotCommand(handler)
+func (client *client) RegisterBotCommand() {
+	// Future stuff?
+}
+
+func (client *client) Pong(parameters string) {
+	cmd := fmt.Sprintf("PONG %s", parameters)
+	err := client.Send(cmd)
+	if err != nil {
+		log.Println("ERROR: ", cmd, err.Error())
+	}
+}
 
 func (client *client) Authenticate(username string, password string) error {
 	log.Printf("Client.Authenticate(%s)\n", username)
-	pass := fmt.Sprintf("PASS oauth:%s\n", password)
-	nick := fmt.Sprintf("NICK %s\n", username)
+	pass := fmt.Sprintf("PASS oauth:%s", password)
+	nick := fmt.Sprintf("NICK %s", username)
 
 	err := client.Send(pass)
 	if err != nil {
