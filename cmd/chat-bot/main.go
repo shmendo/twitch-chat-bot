@@ -57,11 +57,11 @@ func HandleBotCommand(message irc.Message, replyWith irc.ReplyCallback) {
 	if message.Parameters == "!chucknorris" {
 		fact, err := chuck.RandomChuckFact()
 		if err != nil {
-			log.Println("Could not retrieve chucknorris fact, he may have roundhouse kicked the server!")
+			log.Println("TwitchChatBot->Could not retrieve chucknorris fact, he may have roundhouse kicked the server!")
 		}
 		replyWith(fmt.Sprintf("PRIVMSG %s :%s", message.Command.Channel, fact))
 	} else {
-		log.Println("not handling bot command %s", message.Parameters)
+		log.Printf("TwitchChatBot->not handling bot command %s", message.Parameters)
 	}
 }
 

@@ -110,23 +110,27 @@ func (client *client) Send(message string) error {
 }
 
 func (client *client) OnMessage(handler MessageHandler) {
+	log.Println("Client->OnMessage")
 	client.onMessage = handler
 }
 
 func (client *client) OnAuthenticated(handler MessageHandler) {
+	log.Println("Client->OnAuthenticated")
 	client.onAuthenticated = handler
 }
 
 func (client *client) OnPrivateMessage(handler MessageHandler) {
+	log.Println("Client->OnPrivateMessage")
 	client.onPrivateMessage = handler
 }
 
 func (client *client) OnBotCommand(handler MessageHandler) {
+	log.Println("Client->OnBotCommand")
 	client.onBotCommand = handler
 }
 
 func (client *client) Pong(parameters string) {
-	cmd := fmt.Sprintf("PONG %s", parameters)
+	cmd := fmt.Sprintf("Client->PONG %s", parameters)
 	err := client.Send(cmd)
 	if err != nil {
 		log.Println("ERROR: ", cmd, err.Error())

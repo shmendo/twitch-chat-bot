@@ -7,6 +7,10 @@
 - reach out to 3rd party API and then post some data back to the calling user
 - should appear in the chat window
 
+## Expected command output
+
+![twitch bot output](twitch-bot-output.png)
+
 # Running
 
 - `cp .env.example .env`
