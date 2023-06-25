@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 )
 
 type ReplyCallback func(command string)
@@ -15,9 +16,15 @@ type ReplyCallback func(command string)
 type MessageHandler func(message Message, replyWith ReplyCallback)
 
 type client struct {
-	conn           net.Conn
-	scanner        *bufio.Scanner
-	messageHandler MessageHandler
+	conn       net.Conn
+	scanner    *bufio.Scanner
+	sendBuffer chan string
+
+	// message specific handlers
+	onMessage        MessageHandler
+	onAuthenticated  MessageHandler
+	onPrivateMessage MessageHandler
+	onBotCommand     MessageHandler
 }
 
 func NewClient(endpoint string) (*client, error) {
@@ -27,49 +34,77 @@ func NewClient(endpoint string) (*client, error) {
 	}
 	conn, err := tls.Dial("tcp", endpoint, &tls.Config{})
 
+	// var logBuffer bytes.Buffer
+	// logger := log.New(&logBuffer, "client: ", log.Lshortfile)
+	// logger.Print("Hello, log file!")
+	// output: "logger: client.go:19: Hello, log file!"
+
 	client := client{
-		conn:    conn,
-		scanner: bufio.NewScanner(conn),
+		conn:       conn,
+		scanner:    bufio.NewScanner(conn),
+		sendBuffer: make(chan string),
 	}
 
 	return &client, err
 }
 
 func (client *client) ListenForMessages() {
-	log.Println("Client.ListenForMessages()")
-
 	for client.scanner.Scan() {
 		line := client.scanner.Text()
-
-		if client.messageHandler == nil {
-			log.Println("no messageHandler set!")
-			log.Println(line)
-			continue
-		}
 
 		message, err := NewMessage(line)
 		if err != nil {
 			log.Printf("failed to parse message (%s)", message.Text)
 			continue
 		}
-
-		if message.Command.Command == "PING" {
+		switch message.Command.Command {
+		case "PING":
 			client.Pong(message.Parameters)
-		} else {
-			client.messageHandler(message, func(replyWith string) {
-				if replyWith != "" {
-					client.Send(replyWith)
-				}
-			})
+		case "376":
+			if client.onAuthenticated != nil {
+				client.onAuthenticated(message, client.queueMessage)
+			}
+		case "JOIN":
+			log.Printf("Successfully joined %s", message.Command.Channel)
+		case "PRIVMSG":
+			if message.CommandType == "bot" && client.onBotCommand != nil {
+				client.onBotCommand(message, client.queueMessage)
+			}
+		}
+		if client.onMessage != nil {
+			client.onMessage(message, client.queueMessage)
 		}
 	}
+}
+
+func (client *client) queueMessage(message string) {
+	log.Printf("queueMessage (%s)", message)
+	if message != "" {
+		go func() {
+			client.sendBuffer <- message
+		}()
+	}
+
+	// we can send up to 100 messages every 30 seconds
+	// which equates to around 1 messages every 0.3s
+	// we don't want to hit the limit though, so we'll
+	// go just a little slower (.27s)
+	go func() {
+		for messageToSend := range client.sendBuffer {
+			time.Tick(time.Millisecond * 300)
+			err := client.Send(messageToSend)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}()
 }
 
 func (client *client) Send(message string) error {
 	if strings.Contains(message, "PASS") {
 		log.Println("Client.Send() -> PASS:REDACTED")
 	} else {
-		log.Println("Client.Send() -> ", message)
+		log.Println("Client.Send() ->", message)
 	}
 	if !strings.HasSuffix(message, "\r\n") {
 		message = fmt.Sprintf("%s\r\n", message)
@@ -79,11 +114,19 @@ func (client *client) Send(message string) error {
 }
 
 func (client *client) OnMessage(handler MessageHandler) {
-	client.messageHandler = handler
+	client.onMessage = handler
 }
 
-func (client *client) RegisterBotCommand() {
-	// Future stuff?
+func (client *client) OnAuthenticated(handler MessageHandler) {
+	client.onAuthenticated = handler
+}
+
+func (client *client) OnPrivateMessage(handler MessageHandler) {
+	client.onPrivateMessage = handler
+}
+
+func (client *client) OnBotCommand(handler MessageHandler) {
+	client.onBotCommand = handler
 }
 
 func (client *client) Pong(parameters string) {
@@ -94,20 +137,19 @@ func (client *client) Pong(parameters string) {
 	}
 }
 
-func (client *client) Authenticate(username string, password string) error {
+func (client *client) Authenticate(username string, password string) {
 	log.Printf("Client.Authenticate(%s)\n", username)
 	pass := fmt.Sprintf("PASS oauth:%s", password)
 	nick := fmt.Sprintf("NICK %s", username)
 
 	err := client.Send(pass)
 	if err != nil {
-		log.Println("ERROR: Authenticate (PASS): ", err.Error())
-		return err
+		log.Println(err)
+		os.Exit(1)
 	}
 	err = client.Send(nick)
 	if err != nil {
-		log.Println("ERROR: Authenticate (NICK):", err.Error())
-		return err
+		log.Println(err)
+		os.Exit(1)
 	}
-	return nil
 }
