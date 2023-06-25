@@ -42,7 +42,7 @@ func NewClient(endpoint string) (*client, error) {
 	client := client{
 		conn:       conn,
 		scanner:    bufio.NewScanner(conn),
-		sendBuffer: make(chan string),
+		sendBuffer: make(chan string, 100),
 	}
 
 	return &client, err
@@ -69,6 +69,8 @@ func (client *client) ListenForMessages() {
 		case "PRIVMSG":
 			if message.CommandType == "bot" && client.onBotCommand != nil {
 				client.onBotCommand(message, client.queueMessage)
+			} else {
+				client.onPrivateMessage(message, client.queueMessage)
 			}
 		}
 		if client.onMessage != nil {
@@ -78,11 +80,9 @@ func (client *client) ListenForMessages() {
 }
 
 func (client *client) queueMessage(message string) {
-	log.Printf("queueMessage (%s)", message)
+	log.Printf("Client->queueMessage(%s)", message)
 	if message != "" {
-		go func() {
-			client.sendBuffer <- message
-		}()
+		client.sendBuffer <- message
 	}
 
 	// we can send up to 100 messages every 30 seconds
@@ -101,11 +101,7 @@ func (client *client) queueMessage(message string) {
 }
 
 func (client *client) Send(message string) error {
-	if strings.Contains(message, "PASS") {
-		log.Println("Client.Send() -> PASS:REDACTED")
-	} else {
-		log.Println("Client.Send() ->", message)
-	}
+	log.Printf("Client->Send(%s)", message)
 	if !strings.HasSuffix(message, "\r\n") {
 		message = fmt.Sprintf("%s\r\n", message)
 	}
@@ -138,18 +134,10 @@ func (client *client) Pong(parameters string) {
 }
 
 func (client *client) Authenticate(username string, password string) {
-	log.Printf("Client.Authenticate(%s)\n", username)
+	log.Printf("Client->Authenticate(%s)\n", username)
 	pass := fmt.Sprintf("PASS oauth:%s", password)
 	nick := fmt.Sprintf("NICK %s", username)
 
-	err := client.Send(pass)
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-	err = client.Send(nick)
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
+	client.queueMessage(pass)
+	client.queueMessage(nick)
 }

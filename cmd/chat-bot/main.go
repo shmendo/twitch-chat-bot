@@ -25,18 +25,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	// General message handler for ANY message
 	client.OnMessage(HandleMessage)
 	client.OnAuthenticated(HandleAuthenticated)
 	client.OnPrivateMessage(HandlePrivateMessage)
 	client.OnBotCommand(HandleBotCommand)
 
-	// listen forever in the background
+	// listen for messages in the background forever
 	wg.Add(1)
 	go client.ListenForMessages()
 	client.Authenticate(username, password)
-
-	// Wait forever :)
 	wg.Wait()
 }
 
@@ -46,17 +43,17 @@ func Log(message string) {
 }
 
 func HandleAuthenticated(message irc.Message, replyWith irc.ReplyCallback) {
-	log.Println("TwitchChatBot->HandleAuthenticated()", message, log.Lshortfile)
+	log.Println("TwitchChatBot->HandleAuthenticated()")
 	channelName := os.Getenv("CHANNEL")
 	replyWith(fmt.Sprintf("JOIN #%s", channelName))
 }
 
 func HandlePrivateMessage(message irc.Message, replyWith irc.ReplyCallback) {
-	log.Println("TwitchChatBot->HandlePrivateMessage()", message, log.Lshortfile)
+	log.Println("TwitchChatBot->HandlePrivateMessage()", message.Parameters)
 }
 
 func HandleBotCommand(message irc.Message, replyWith irc.ReplyCallback) {
-	log.Println("TwitchChatBot->HandleBotCommand()", message, log.Lshortfile)
+	log.Println("TwitchChatBot->HandleBotCommand()")
 	if message.Parameters == "!chucknorris" {
 		fact, err := chuck.RandomChuckFact()
 		if err != nil {
@@ -70,5 +67,5 @@ func HandleBotCommand(message irc.Message, replyWith irc.ReplyCallback) {
 
 // The Meat & Potatoes
 func HandleMessage(message irc.Message, replyWith irc.ReplyCallback) {
-	// log.Println("TwitchChatBot->HandleMessage()", message, log.Lshortfile)
+	// log.Println("TwitchChatBot->HandleMessage()")
 }
