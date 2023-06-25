@@ -38,19 +38,12 @@ func main() {
 
 // The Meat & Potatoes
 func HandleMessage(message irc.Message, replyWith irc.ReplyCallback) {
-	if message.CommandType == "bot" && message.Command.Command == "chucknorris" {
+	if message.CommandType == "bot" && message.Parameters == "!chucknorris" {
 		fact, err := chuck.RandomChuckFact()
 		if err != nil {
 			log.Println("Could not retrieve chucknorris fact, he may have roundhouse kicked the server!", err)
 		}
-		log.Println(fact)
-		log.Println(message.Source.Nick)
-		log.Println(message.Source.Host)
-		log.Println(message.Command.Command)
-		log.Println(message.Command.Channel)
-		log.Println(message.Command.Info)
-		log.Println(message.Parameters)
-		// replyWith()
+		replyWith(fmt.Sprintf("PRIVMSG %s :%s", message.Command.Channel, fact))
 	} else {
 		switch message.Command.Command {
 		case "JOIN":
@@ -63,10 +56,11 @@ func HandleMessage(message irc.Message, replyWith irc.ReplyCallback) {
 			break
 		default:
 			// log.Printf(
-			// 	"Nothing to do for - Command: %s, Channel: %s, Info: %s",
+			// 	"UNRECOGNIZED - Command: %s, Channel: %s, Info: %s, Parameters: %s",
 			// 	message.Command.Command,
 			// 	message.Command.Channel,
 			// 	message.Command.Info,
+			// 	message.Parameters,
 			// )
 		}
 	}

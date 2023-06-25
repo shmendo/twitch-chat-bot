@@ -35,27 +35,27 @@ func TestNewMessage(t *testing.T) {
 			},
 			wantError: false,
 		},
-		// {
-		// 	description: "should handle !norris",
-		// 	input:       "PING :tmi.twitch.tv",
-		// 	expected: Message{
-		// 		Text:  "PING :tmi.twitch.tv",
-		// 		Valid: true,
-		// 		Tags:  []Tag(nil),
-		// 		Source: Source{
-		// 			Nick: "",
-		// 			Host: "",
-		// 		},
-		// 		Command: Command{
-		// 			Command: "PING",
-		// 			Channel: "",
-		// 			Info:    "",
-		// 		},
-		// 		CommandType: "standard",
-		// 		Parameters:  "tmi.twitch.tv",
-		// 	},
-		// 	wantError: false,
-		// }
+		{
+			description: "should handle !norris",
+			input:       ":benjamin_walters!benjamin_walters@benjamin_walters.tmi.twitch.tv PRIVMSG #benjamin_walters :!chucknorris",
+			expected: Message{
+				Text:  ":benjamin_walters!benjamin_walters@benjamin_walters.tmi.twitch.tv PRIVMSG #benjamin_walters :!chucknorris",
+				Valid: true,
+				Tags:  []Tag(nil),
+				Source: Source{
+					Nick: "benjamin_walters",
+					Host: "benjamin_walters@benjamin_walters.tmi.twitch.tv",
+				},
+				Command: Command{
+					Command: "PRIVMSG",
+					Channel: "#benjamin_walters",
+					Info:    "",
+				},
+				CommandType: "bot",
+				Parameters:  "!chucknorris",
+			},
+			wantError: false,
+		},
 		// {
 		// 	description: "should p",
 		// 	input:       ":tmi.twitch.tv 001 benjamin_walters :Welcome, GLHF!",

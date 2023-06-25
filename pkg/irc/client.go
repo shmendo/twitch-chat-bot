@@ -40,7 +40,6 @@ func (client *client) ListenForMessages() {
 
 	for client.scanner.Scan() {
 		line := client.scanner.Text()
-		// log.Printf("----------(%s)----------", line)
 
 		if client.messageHandler == nil {
 			log.Println("no messageHandler set!")
@@ -54,7 +53,6 @@ func (client *client) ListenForMessages() {
 			continue
 		}
 
-		// log.Println("Client.Rcvd() <- ", message.Command.Channel)
 		if message.Command.Command == "PING" {
 			client.Pong(message.Parameters)
 		} else {
