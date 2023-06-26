@@ -38,11 +38,6 @@ func NewClient(endpoint string) (*client, error) {
 		os.Exit(1)
 	}
 
-	// var logBuffer bytes.Buffer
-	// logger := log.New(&logBuffer, "client: ", log.Lshortfile)
-	// logger.Print("Hello, log file!")
-	// output: "logger: client.go:19: Hello, log file!"
-
 	client := client{
 		conn:       conn,
 		scanner:    bufio.NewScanner(conn),
