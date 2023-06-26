@@ -33,6 +33,10 @@ func NewClient(endpoint string) (*client, error) {
 		os.Exit(1)
 	}
 	conn, err := tls.Dial("tcp", endpoint, &tls.Config{})
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
 
 	// var logBuffer bytes.Buffer
 	// logger := log.New(&logBuffer, "client: ", log.Lshortfile)
